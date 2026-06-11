@@ -1055,29 +1055,33 @@ This section collects the empirical comparisons. The implementation section defi
 \paragraph{Diagnostics used in this section.}
 Section~\ref{sec:impl-diagnostics} already defines autocorrelation,
 integrated autocorrelation time, and effective sample size, so this
-section only states how those quantities are used in the result tables
-and figures. For a post-burn-in chain with sample mean $\hat{\mu}$ and
-sample covariance $\hat{\Sigma}$, the two accuracy diagnostics are
+section only fixes the notation used in the result tables and figures.
+Let $\mu$ and $\Sigma$ denote the exact posterior mean and covariance
+when they are available, or the corresponding long-chain reference
+values in the logistic-regression experiment. For a post-burn-in chain
+with sample mean $\hat{\mu}$ and sample covariance $\hat{\Sigma}$, the
+accuracy diagnostics are
 \[
-e_\mu = \|\hat{\mu}-\mu_{\mathrm{ref}}\|_2,
+e_\mu = \|\hat{\mu}-\mu\|_2,
 \qquad
-e_\Sigma = \|\hat{\Sigma}-\Sigma_{\mathrm{ref}}\|_F .
+e_\Sigma = \|\hat{\Sigma}-\Sigma\|_F .
 \]
-The first measures error in the posterior centre, while the second
-measures error in the posterior spread and correlation structure. For
-the Gaussian and linear-regression experiments, $(\mu_{\mathrm{ref}},
-\Sigma_{\mathrm{ref}})$ are exact analytic posterior moments; for
-logistic regression, they are estimated from the long MALA reference
-chain. Mixing is summarised by
+The mean error measures error in the posterior centre, while the
+covariance error measures error in the posterior spread and correlation
+structure. The implementation uses this absolute Frobenius error rather
+than the relative error $\|\hat{\Sigma}-\Sigma\|_F/\|\Sigma\|_F$,
+because the main comparisons are within a fixed target and the absolute
+distortion of the covariance is the quantity that shows ULA's
+finite-step bias most directly. Mixing is summarised by
 \[
 \mathrm{ESS}_{\min}=\min_{1\le j\le d}\mathrm{ESS}_j,
 \]
 the worst coordinate-wise ESS from Section~\ref{sec:impl-diagnostics}.
-Finally, computational cost is reported through
+Finally, cost-normalised ESS is reported as
 \[
-W = N_{\nabla} + N_{\log\pi},
+C = N_{\nabla} + N_{\log\pi},
 \qquad
-\mathrm{ESS}_{\mathrm{work}}=\frac{\mathrm{ESS}_{\min}}{W},
+\mathrm{ESS}_{\mathrm{cost}}=\frac{\mathrm{ESS}_{\min}}{C},
 \]
 where $N_{\nabla}$ counts gradient evaluations and $N_{\log\pi}$ counts
 log-density evaluations. This is not a wall-clock model, but it prevents
@@ -1371,7 +1375,7 @@ Requires tuning $h$ and $\gamma$; theory depends on conditioning. \\
 
 The main interpretation is that the three algorithms should not be ranked by a single number. ULA is the simplest and cheapest discretisation, so it is attractive when a small amount of bias is acceptable or when the step size can be chosen conservatively. MALA uses the same local Langevin proposal but corrects it with a Metropolis--Hastings step, making it more reliable for exact targeting at the price of rejections and additional target/proposal computations. KLMC changes the underlying dynamics by adding momentum; this can improve exploration, but the unadjusted implementation is still sensitive to the integrator, the step size, and the friction parameter.
 
-There are several caveats to the numerical comparisons. First, the ESS reported here is the minimum coordinate-wise ESS, not a multivariate ESS, and values near the post-burn-in chain length should be read as diagnostic summaries rather than exact independent sample counts. Second, the cost normalisation uses the simple work count $W=N_{\nabla}+N_{\log\pi}$ rather than wall-clock time. This charges MALA for the log-density work needed by the accept--reject correction, but it still ignores proposal-density arithmetic, linear algebra constants, vectorisation, and implementation-level timing effects. Third, the logistic-regression errors are distances to a long MALA reference chain rather than exact posterior errors; no multi-chain convergence or Monte Carlo standard error analysis is included. Finally, KLMC is unadjusted in these experiments, so high ESS can still correspond to efficient exploration of a biased discretisation.
+There are several caveats to the numerical comparisons. First, the ESS reported here is the minimum coordinate-wise ESS, not a multivariate ESS, and values near the post-burn-in chain length should be read as diagnostic summaries rather than exact independent sample counts. Second, the cost normalisation uses the simple work count $C=N_{\nabla}+N_{\log\pi}$ rather than wall-clock time. This charges MALA for the log-density work needed by the accept--reject correction, but it still ignores proposal-density arithmetic, linear algebra constants, vectorisation, and implementation-level timing effects. Third, the logistic-regression errors are distances to a long MALA reference chain rather than exact posterior errors; no multi-chain convergence or Monte Carlo standard error analysis is included. Finally, KLMC is unadjusted in these experiments, so high ESS can still correspond to efficient exploration of a biased discretisation.
 
 \section{Conclusion}
 
