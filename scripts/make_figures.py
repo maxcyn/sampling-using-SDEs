@@ -9,7 +9,7 @@ import numpy as np
 
 from m2r_langevin.plotting import (
     plot_cost_aware_sweep,
-    plot_gaussian_ula_mala_sweep,
+    plot_gaussian_sampler_sweep,
     plot_trace_acf,
 )
 from m2r_langevin.samplers import mala
@@ -84,8 +84,8 @@ def main() -> None:
         make_gaussian_trace_acf(figure_dir / "gaussian_trace_acf.png"),
         maybe_plot(
             "results/summary/gaussian_2d_sweep.csv",
-            plot_gaussian_ula_mala_sweep,
-            figure_dir / "gaussian_ula_mala_sweep.png",
+            plot_gaussian_sampler_sweep,
+            figure_dir / "gaussian_sampler_sweep.png",
             args.allow_missing,
         ),
         maybe_plot(

@@ -108,14 +108,13 @@ def plot_trace_acf(
     return _save(fig, output_path)
 
 
-def plot_gaussian_ula_mala_sweep(
+def plot_gaussian_sampler_sweep(
     data: DataFrameOrPath,
     output_path: str | Path,
 ) -> Path:
-    """Plot the Gaussian ULA-vs-MALA sweep used in the report."""
+    """Plot the Gaussian sampler sweep used in the report."""
 
     df = _load_frame(data)
-    df = df[df["sampler"].isin(["ULA", "MALA"])]
     df = _aggregate(df, ["sampler", "h"])
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4))
@@ -154,6 +153,6 @@ def plot_cost_aware_sweep(
 
 __all__ = [
     "plot_cost_aware_sweep",
-    "plot_gaussian_ula_mala_sweep",
+    "plot_gaussian_sampler_sweep",
     "plot_trace_acf",
 ]

@@ -3,9 +3,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+import m2r_langevin.plotting as plotting
 from m2r_langevin.plotting import (
     plot_cost_aware_sweep,
-    plot_gaussian_ula_mala_sweep,
+    plot_gaussian_sampler_sweep,
     plot_trace_acf,
 )
 
@@ -43,10 +44,24 @@ def test_plot_trace_acf_creates_png(tmp_path: Path) -> None:
     assert_png(path)
 
 
-def test_plot_gaussian_ula_mala_sweep_creates_png(tmp_path: Path) -> None:
-    path = plot_gaussian_ula_mala_sweep(sweep_frame(), tmp_path / "gaussian.png")
+def test_plot_gaussian_sampler_sweep_creates_png(tmp_path: Path) -> None:
+    path = plot_gaussian_sampler_sweep(sweep_frame(), tmp_path / "gaussian.png")
 
     assert_png(path)
+
+
+def test_plot_gaussian_sweep_includes_klmc(tmp_path: Path, monkeypatch) -> None:
+    plotted_labels: list[str] = []
+
+    def capture_labels(fig, output_path):
+        plotted_labels.extend(line.get_label() for line in fig.axes[0].lines)
+        return Path(output_path).with_suffix(".png")
+
+    monkeypatch.setattr(plotting, "_save", capture_labels)
+
+    plot_gaussian_sampler_sweep(sweep_frame(), tmp_path / "gaussian.png")
+
+    assert plotted_labels == ["ULA", "MALA", "KLMC"]
 
 
 def test_plot_cost_aware_sweep_creates_png(tmp_path: Path) -> None:
