@@ -1,0 +1,2 @@
+experiment,sampler,setting,seed,h,gamma,n_samples,burn,post_burn_samples,dimension,acceptance_rate,laplace_mean_diff,laplace_cov_diff,laplace_success,min_ess,grad_evals,logprob_evals,work_units,ess_per_work
+logistic_reference,MALA,reference,123,0.004,,80000,10000,70000,5,0.957325,0.06920101791051377,0.005071595337221605,True,1679.0699664911529,80001,80001,160002,0.01049405611486827

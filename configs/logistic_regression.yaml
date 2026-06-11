@@ -1,0 +1,22 @@
+experiment: logistic_regression
+output_paths:
+  summary: results/summary/logistic_regression_cost_aware.csv
+  reference: results/references/logistic_reference_chain_summary.csv
+setting: logistic
+target:
+  n: 400
+  d: 5
+  tau: 10.0
+  seed: 0
+reference:
+  step_size: 0.004
+  n_samples: 80000
+  burn: 10000
+  seed: 123
+samplers: [ULA, MALA, KLMC]
+step_grid: [0.001, 0.002, 0.004, 0.006, 0.008, 0.010, 0.015, 0.020]
+seeds: [700]
+n_samples: 30000
+burn: 5000
+gamma: 2.0
+max_lag: 1000

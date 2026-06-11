@@ -1,0 +1,11 @@
+experiment: klmc_friction
+output_path: results/summary/klmc_friction_sweep.csv
+target:
+  d: 10
+  rho: 0.8
+gamma_grid: [0.25, 0.5, 1.0, 2.0, 4.0, 8.0]
+h_scale: 0.60
+seed: 900
+n_samples: 16000
+burn: 3000
+max_lag: 1000

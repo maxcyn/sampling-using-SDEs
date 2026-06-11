@@ -1,0 +1,13 @@
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.venv/
+*.egg-info/
+results/raw/
+*.npy
+*.npz
+*.pkl
+.DS_Store
+build/
