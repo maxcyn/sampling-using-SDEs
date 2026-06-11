@@ -1,5 +1,6 @@
 __pycache__/
 .pytest_cache/
+.tmp/
 .mypy_cache/
 .ruff_cache/
 .ipynb_checkpoints/
@@ -11,6 +12,12 @@ results/raw/
 *.pkl
 .DS_Store
 build/
+
+# Personal report drafts and Overleaf/PDF outputs
+M2R*.tex
+M2R_template*.tex
+report/
+*.pdf
 
 # Local agent/Codex/editor metadata
 .codex/

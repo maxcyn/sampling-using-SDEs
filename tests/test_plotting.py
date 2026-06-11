@@ -5,10 +5,7 @@ import pandas as pd
 
 from m2r_langevin.plotting import (
     plot_cost_aware_sweep,
-    plot_dimension_scaling,
     plot_gaussian_ula_mala_sweep,
-    plot_klmc_friction_sweep,
-    plot_precision_scaling,
     plot_trace_acf,
 )
 
@@ -54,39 +51,5 @@ def test_plot_gaussian_ula_mala_sweep_creates_png(tmp_path: Path) -> None:
 
 def test_plot_cost_aware_sweep_creates_png(tmp_path: Path) -> None:
     path = plot_cost_aware_sweep(sweep_frame(), tmp_path / "cost.png", title="Cost")
-
-    assert_png(path)
-
-
-def test_plot_dimension_scaling_creates_png(tmp_path: Path) -> None:
-    df = sweep_frame().drop(columns=["h"])
-    df["dimension"] = [2, 5] * 3
-
-    path = plot_dimension_scaling(df, tmp_path / "dimension.png")
-
-    assert_png(path)
-
-
-def test_plot_precision_scaling_creates_png(tmp_path: Path) -> None:
-    df = sweep_frame().drop(columns=["h"])
-    df["work_units"] = [1000, 2000] * 3
-
-    path = plot_precision_scaling(df, tmp_path / "precision.png")
-
-    assert_png(path)
-
-
-def test_plot_klmc_friction_sweep_creates_png(tmp_path: Path) -> None:
-    df = pd.DataFrame(
-        {
-            "sampler": ["KLMC", "KLMC"],
-            "gamma": [0.5, 2.0],
-            "mean_error": [0.2, 0.1],
-            "cov_error": [0.4, 0.2],
-            "ess_per_work": [0.01, 0.03],
-        }
-    )
-
-    path = plot_klmc_friction_sweep(df, tmp_path / "friction.png")
 
     assert_png(path)

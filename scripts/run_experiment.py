@@ -10,12 +10,9 @@ from typing import Any
 import yaml
 
 from m2r_langevin.experiments import (
-    dimension_scaling,
     gaussian_sweep,
-    klmc_friction,
     linear_regression,
     logistic_regression,
-    precision_scaling,
 )
 from m2r_langevin.results import write_outputs
 
@@ -23,9 +20,6 @@ EXPERIMENTS = {
     "gaussian_sweep": gaussian_sweep,
     "linear_regression": linear_regression,
     "logistic_regression": logistic_regression,
-    "dimension_scaling": dimension_scaling,
-    "precision_scaling": precision_scaling,
-    "klmc_friction": klmc_friction,
 }
 
 

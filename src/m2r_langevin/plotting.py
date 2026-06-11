@@ -152,67 +152,8 @@ def plot_cost_aware_sweep(
     return _save(fig, output_path)
 
 
-def plot_dimension_scaling(data: DataFrameOrPath, output_path: str | Path) -> Path:
-    """Plot diagnostics as target dimension changes."""
-
-    df = _aggregate(_load_frame(data), ["sampler", "dimension"])
-
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-    _plot_metric_by_sampler(axes[0], df, "dimension", "mean_error", "mean error")
-    _plot_metric_by_sampler(axes[1], df, "dimension", "cov_error", "covariance error")
-    _plot_metric_by_sampler(
-        axes[2], df, "dimension", "ess_per_work", "ESS per work unit"
-    )
-    axes[0].set_title("Mean error")
-    axes[1].set_title("Covariance error")
-    axes[2].set_title("Cost-normalised ESS")
-    axes[0].legend()
-    fig.tight_layout()
-    return _save(fig, output_path)
-
-
-def plot_precision_scaling(data: DataFrameOrPath, output_path: str | Path) -> Path:
-    """Plot diagnostics against computational work budget."""
-
-    df = _aggregate(_load_frame(data), ["sampler", "work_units"])
-
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-    _plot_metric_by_sampler(axes[0], df, "work_units", "mean_error", "mean error")
-    _plot_metric_by_sampler(axes[1], df, "work_units", "cov_error", "covariance error")
-    _plot_metric_by_sampler(axes[2], df, "work_units", "min_ess", "minimum ESS")
-    for ax in axes:
-        ax.set_xscale("log")
-    axes[0].set_title("Mean error")
-    axes[1].set_title("Covariance error")
-    axes[2].set_title("Minimum coordinate ESS")
-    axes[0].legend()
-    fig.tight_layout()
-    return _save(fig, output_path)
-
-
-def plot_klmc_friction_sweep(data: DataFrameOrPath, output_path: str | Path) -> Path:
-    """Plot KLMC diagnostics over the friction parameter."""
-
-    df = _aggregate(_load_frame(data), ["sampler", "gamma"])
-
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-    _plot_metric_by_sampler(axes[0], df, "gamma", "mean_error", "mean error")
-    _plot_metric_by_sampler(axes[1], df, "gamma", "cov_error", "covariance error")
-    _plot_metric_by_sampler(axes[2], df, "gamma", "ess_per_work", "ESS per work unit")
-    for ax in axes:
-        ax.set_xscale("log", base=2)
-    axes[0].set_title("Mean error")
-    axes[1].set_title("Covariance error")
-    axes[2].set_title("Cost-normalised ESS")
-    fig.tight_layout()
-    return _save(fig, output_path)
-
-
 __all__ = [
     "plot_cost_aware_sweep",
-    "plot_dimension_scaling",
     "plot_gaussian_ula_mala_sweep",
-    "plot_klmc_friction_sweep",
-    "plot_precision_scaling",
     "plot_trace_acf",
 ]

@@ -11,9 +11,6 @@ DEFAULT_CONFIGS = [
     "configs/gaussian_2d.yaml",
     "configs/linear_regression.yaml",
     "configs/logistic_regression.yaml",
-    "configs/dimension_scaling.yaml",
-    "configs/precision_scaling.yaml",
-    "configs/klmc_friction_sweep.yaml",
 ]
 
 

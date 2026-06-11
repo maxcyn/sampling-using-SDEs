@@ -9,16 +9,13 @@ import numpy as np
 
 from m2r_langevin.plotting import (
     plot_cost_aware_sweep,
-    plot_dimension_scaling,
     plot_gaussian_ula_mala_sweep,
-    plot_klmc_friction_sweep,
-    plot_precision_scaling,
     plot_trace_acf,
 )
 from m2r_langevin.samplers import mala
 from m2r_langevin.targets import make_correlated_gaussian
 
-DEFAULT_FIGURE_DIR = Path("figures/report")
+DEFAULT_FIGURE_DIR = Path("fig")
 
 
 def parse_args() -> argparse.Namespace:
@@ -104,24 +101,6 @@ def main() -> None:
             figure_dir / "logistic_regression_cost_aware.png",
             args.allow_missing,
             title="Bayesian logistic regression",
-        ),
-        maybe_plot(
-            "results/summary/dimension_scaling.csv",
-            plot_dimension_scaling,
-            figure_dir / "dimension_scaling.png",
-            args.allow_missing,
-        ),
-        maybe_plot(
-            "results/summary/precision_scaling_raw.csv",
-            plot_precision_scaling,
-            figure_dir / "precision_scaling.png",
-            args.allow_missing,
-        ),
-        maybe_plot(
-            "results/summary/klmc_friction_sweep.csv",
-            plot_klmc_friction_sweep,
-            figure_dir / "friction_sweep.png",
-            args.allow_missing,
         ),
     ]
 

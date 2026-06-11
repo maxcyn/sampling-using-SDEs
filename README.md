@@ -73,9 +73,6 @@ The configured experiments are:
 | `configs/gaussian_2d.yaml` | Step-size sweep on a strongly correlated 2D Gaussian target | `results/summary/gaussian_2d_sweep.csv` |
 | `configs/linear_regression.yaml` | Cost-aware comparison on Bayesian linear regression | `results/summary/linear_regression_cost_aware.csv` |
 | `configs/logistic_regression.yaml` | Cost-aware comparison on Bayesian logistic regression, scored against a long MALA reference chain | `results/summary/logistic_regression_cost_aware.csv` |
-| `configs/dimension_scaling.yaml` | Scaling comparison across Gaussian target dimensions | `results/summary/dimension_scaling.csv` |
-| `configs/precision_scaling.yaml` | Accuracy-versus-budget comparison for increasing work budgets | `results/summary/precision_scaling_raw.csv` |
-| `configs/klmc_friction_sweep.yaml` | KLMC friction-parameter sweep | `results/summary/klmc_friction_sweep.csv` |
 
 After running one or more experiments, regenerate figures from the available
 CSV files:
@@ -90,7 +87,7 @@ Use `--allow-missing` when only a subset of the CSV files has been regenerated.
 
 - `results/summary/`: aggregated numerical summaries used for plots and tables.
 - `results/references/`: reference-chain summaries for non-Gaussian targets.
-- `fig/`: PNG figures included in the report.
+- `fig/`: report figures included by the Overleaf report.
 - `tables/`: table outputs used during report preparation.
 
 These outputs are checked into the repository so readers can inspect the
@@ -107,8 +104,7 @@ src/m2r_langevin/experiments/
 scripts/                 Command-line entry points for experiments and figures
 notebooks/               Archived exploratory notebooks
 results/                 Generated CSV outputs
-fig/                     Report-ready PNG figures
-report/                  Report assets
+fig/                     Report-ready figures
 tests/                   Pytest test suite
 ```
 
