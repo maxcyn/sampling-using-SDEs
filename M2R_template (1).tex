@@ -618,7 +618,7 @@ Metropolis-adjusted counterpart (MALA), develops the mixing diagnostics
 that the later comparisons rely on, and validates everything on an
 analytically tractable Gaussian benchmark. The second half then applies
 these tools to Bayesian linear and logistic regression, introduces a
-cost-aware efficiency metric based on gradient evaluations, and studies
+cost-aware efficiency metric based on simple target-evaluation work units, and studies
 the dependence on the step size and the dimension; it also provides the
 empirical comparison with the kinetic sampler of
 Section~\ref{sec:extension}.
@@ -661,10 +661,10 @@ throughout the experiments. First, only the unnormalised log-density is
 ever needed: every algorithm below depends on $\pi$ through differences
 $\log\pi(y)-\log\pi(x)$ or through the gradient, so the intractable
 normalising constant cancels and never has to be computed. Second,
-because the gradient is the only expensive operation in realistic
-models, the number of gradient evaluations is the natural unit of
-computational cost; we return to this point when comparing samplers in
-Section~\ref{sec:results}.
+because gradients and log-density evaluations are the repeated target
+operations in these algorithms, the experiments later report both
+accuracy and a simple work count based on these evaluations. We return
+to this point when comparing samplers in Section~\ref{sec:results}.
 
 \subsection{The unadjusted Langevin algorithm}
 \label{sec:impl-ula}
@@ -766,12 +766,12 @@ $x \leftarrow x_0$;\quad $\ell_x \leftarrow \log\pi(x)$;\quad $g_x \leftarrow \n
 \label{alg:mala}
 \end{algorithm}
 
-The price of the correction is one additional gradient evaluation per
-iteration: the proposed point's gradient is required both for the
-reverse proposal density in \eqref{eq:impl-accept} and as the cached
-gradient should the move be accepted. MALA therefore costs roughly twice
-as much per step as ULA, a difference we account for explicitly when we
-measure efficiency per gradient evaluation later. In exchange, MALA has
+The price of the correction is additional target work per iteration:
+the proposed point's log-density is needed for the Metropolis ratio, and
+its gradient is required both for the reverse proposal density in
+\eqref{eq:impl-accept} and as the cached gradient should the move be
+accepted. We account for this explicitly when we measure efficiency per
+work unit later. In exchange, MALA has
 $\pi$ as its \emph{exact} invariant distribution, so its only error is
 the Monte Carlo variance of a finite run rather than a systematic bias.
 The tension between ULA's cheaper, biased steps and MALA's corrected but
@@ -912,8 +912,8 @@ sits between these two cases.
 The remainder of this section makes the heuristic precise: we first
 state the kinetic diffusion and its invariant law, then describe the
 discretisation used in the experiments, and finally compare the resulting
-sampler with ULA and MALA using accuracy, ESS, and ESS per gradient
-evaluation.
+sampler with ULA and MALA using moment accuracy, ESS, and ESS per work
+unit.
 
 \subsection{The Kinetic Langevin Diffusion}
 \label{sec:ext-kinetic-sde}
@@ -1040,8 +1040,8 @@ namely discretisation bias, post-burn-in mixing, and computational cost.
 The implementation used for the final cost-aware comparison is the
 first-order kinetic scheme with exact Ornstein--Uhlenbeck noise over each
 step. It uses one gradient evaluation per iteration, as ULA does, while
-MALA is charged two gradient evaluations per iteration because the
-Metropolis ratio requires the gradient at the proposed point. This
+MALA also requires log-density evaluations for the accept--reject step
+and a proposed-point gradient for the reverse proposal. This work-unit
 normalisation is important: comparing only iteration counts would make
 MALA look artificially cheap.
 
@@ -1051,6 +1051,43 @@ The numerical KLMC comparisons are reported together with the overdamped experim
 \label{sec:results}
 
 This section collects the empirical comparisons. The implementation section defined the samplers and diagnostics; here we use them to compare ULA, MALA, and KLMC on the strongly correlated Gaussian, Bayesian linear regression, and Bayesian logistic regression. The purpose is deliberately empirical: to report how accuracy, mixing, and cost change across the tested step-size grids.
+
+\paragraph{Diagnostics used in this section.}
+Section~\ref{sec:impl-diagnostics} already defines autocorrelation,
+integrated autocorrelation time, and effective sample size, so this
+section only states how those quantities are used in the result tables
+and figures. For a post-burn-in chain with sample mean $\hat{\mu}$ and
+sample covariance $\hat{\Sigma}$, the two accuracy diagnostics are
+\[
+e_\mu = \|\hat{\mu}-\mu_{\mathrm{ref}}\|_2,
+\qquad
+e_\Sigma = \|\hat{\Sigma}-\Sigma_{\mathrm{ref}}\|_F .
+\]
+The first measures error in the posterior centre, while the second
+measures error in the posterior spread and correlation structure. For
+the Gaussian and linear-regression experiments, $(\mu_{\mathrm{ref}},
+\Sigma_{\mathrm{ref}})$ are exact analytic posterior moments; for
+logistic regression, they are estimated from the long MALA reference
+chain. Mixing is summarised by
+\[
+\mathrm{ESS}_{\min}=\min_{1\le j\le d}\mathrm{ESS}_j,
+\]
+the worst coordinate-wise ESS from Section~\ref{sec:impl-diagnostics}.
+Finally, computational cost is reported through
+\[
+W = N_{\nabla} + N_{\log\pi},
+\qquad
+\mathrm{ESS}_{\mathrm{work}}=\frac{\mathrm{ESS}_{\min}}{W},
+\]
+where $N_{\nabla}$ counts gradient evaluations and $N_{\log\pi}$ counts
+log-density evaluations. This is not a wall-clock model, but it prevents
+MALA's accept--reject correction from being treated as free. When MALA
+is used, the acceptance rate
+\[
+a = \frac{N_{\mathrm{acc}}}{N_{\mathrm{prop}}}
+\]
+is also reported as a tuning diagnostic: very small values indicate that
+large proposed moves are often being rejected.
 
 \subsection{A first benchmark: a strongly correlated Gaussian}
 \label{sec:impl-gaussian}
@@ -1089,12 +1126,11 @@ which is close to the target covariance.
 %----------------------------------------------------------------------
 % FIGURE 1 (recommended) — from the cell that plots, for the single MALA
 %   run above, ax[0]=trace of s[:1000,0] and ax[1]=autocorr(s[:,0]) with
-%   ESS in the title. Export that figure to fig/gaussian_trace_acf.pdf
-%   and uncomment the \includegraphics line below.
+%   ESS in the title. Export that figure to figures/report/gaussian_trace_acf.png.
 %----------------------------------------------------------------------
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.9\textwidth]{fig/gaussian_trace_acf.png}
+\includegraphics[width=0.9\textwidth]{figures/report/gaussian_trace_acf.png}
 \caption{Diagnostics for a single MALA run on the correlated Gaussian
 target. \emph{Left:} trace of the first coordinate, showing rapid,
 well-mixed exploration with no visible drift. \emph{Right:} the
@@ -1122,15 +1158,15 @@ because it recurs in every later experiment.
 
 %----------------------------------------------------------------------
 % FIGURE 2 — produced by the ULA/MALA step-size sweep cell in M2R.ipynb.
-% Three panels: covariance error, mean error, minimum ESS, vs step size.
+% Three panels: mean error, covariance error, minimum ESS, vs step size.
 %----------------------------------------------------------------------
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{fig/gaussian_ula_mala_sweep.png}
+\includegraphics[width=\textwidth]{figures/report/gaussian_ula_mala_sweep.png}
 \caption{ULA versus MALA on the correlated Gaussian, as a function of
-step size $h$. \emph{Left:} covariance error in Frobenius norm.
-\emph{Centre:} mean error. \emph{Right:} minimum-coordinate effective
-sample size (higher is better). ULA's covariance error grows with $h$,
+step size $h$. \emph{Left:} mean error. \emph{Centre:} covariance error
+in Frobenius norm. \emph{Right:} minimum-coordinate effective sample size
+(higher is better). ULA's covariance error grows with $h$,
 exposing its $O(h)$ stationary bias, whereas MALA's stays small; ULA's
 ESS climbs monotonically because it never rejects, while MALA's peaks
 and then declines as its acceptance rate falls.}
@@ -1173,8 +1209,14 @@ the bias --- here the covariance error --- keeps the comparison honest.
 
 This Gaussian benchmark thus confirms the theory in a controlled setting
 and establishes the methodology for what follows. ULA is cheap and mixes
-freely but is accurate only at small step sizes; MALA pays for an extra
-gradient and the occasional rejection but removes the bias entirely. The next two experiments carry this comparison into Bayesian linear regression, where the posterior is again Gaussian and the exact moments remain available, and then into logistic regression, where the posterior is non-Gaussian and a long reference chain must stand in for the unavailable truth. The same diagnostics are later reused for the kinetic sampler of Section~\ref{sec:extension}.
+freely but is accurate only at small step sizes; MALA pays for
+log-density/proposal work and the occasional rejection but removes the
+bias entirely. The next two experiments carry this comparison into
+Bayesian linear regression, where the posterior is again Gaussian and
+the exact moments remain available, and then into logistic regression,
+where the posterior is non-Gaussian and a long reference chain must
+stand in for the unavailable truth. The same diagnostics are later
+reused for the kinetic sampler of Section~\ref{sec:extension}.
 
 \subsection{Bayesian linear regression}
 \label{sec:impl-linear-regression}
@@ -1192,7 +1234,7 @@ but the larger dimension makes the tuning trade-off more visible. Figure
 \ref{fig:linear-cost-aware} shows the main trends. ULA gains
 cost-normalised ESS as the step size increases, but the accuracy panels
 show the corresponding growth in discretisation error. MALA remains the
-most stable on covariance and functional accuracy over the useful part of
+most stable on mean and covariance accuracy over the useful part of
 the grid, but its efficiency is moderated by the accept--reject step.
 KLMC improves as $h$ increases, yet in this linear Gaussian example it
 does not clearly dominate MALA on accuracy. The lesson is therefore
@@ -1201,10 +1243,10 @@ this is useful only while finite-step bias remains small.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{fig/linear_regression_cost_aware.png}
+\includegraphics[width=\textwidth]{figures/report/linear_regression_cost_aware.png}
 \caption{Cost-aware Bayesian linear regression comparison. The three
-panels show functional RMSE, covariance error, and ESS per gradient
-evaluation against step size.}
+panels show mean error, covariance error, and ESS per work unit against
+step size.}
 \label{fig:linear-cost-aware}
 \end{figure}
 
@@ -1225,8 +1267,8 @@ The shorter ULA, MALA, and KLMC runs are then scored against this
 numerical reference, not against an analytic truth. Figure
 \ref{fig:logistic-cost-aware} shows that the same relationships persist
 in the non-Gaussian model. ULA again becomes increasingly efficient in
-ESS per gradient evaluation as the step size grows, but this is matched
-by worsening functional and covariance error. MALA is more stable on the
+ESS per work unit as the step size grows, but this is matched by
+worsening mean and covariance error. MALA is more stable on the
 accuracy diagnostics because the Metropolis correction controls the
 finite-step bias. KLMC is competitive for a well-tuned step size, but its
 accuracy is also step-size dependent because the implementation is
@@ -1235,10 +1277,10 @@ ESS is informative only when read together with accuracy and cost.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{fig/logistic_regression_cost_aware.png}
+\includegraphics[width=\textwidth]{figures/report/logistic_regression_cost_aware.png}
 \caption{Cost-aware Bayesian logistic regression comparison against the
-long MALA reference chain. The three panels show functional RMSE,
-covariance error, and ESS per gradient evaluation against step size.}
+long MALA reference chain. The three panels show mean error, covariance
+error, and ESS per work unit against step size.}
 \label{fig:logistic-cost-aware}
 \end{figure}
 
@@ -1248,18 +1290,18 @@ covariance error, and ESS per gradient evaluation against step size.}
 \label{sec:ext-experiments}
 
 The notebook compares ULA, MALA, and KLMC on the correlated Gaussian
-using the same post-burn-in diagnostics as before, together with a
-functional RMSE over posterior summaries and ESS per gradient evaluation.
+using the same post-burn-in diagnostics as before, together with ESS per
+work unit.
 The friction parameter is fixed at $\gamma=2.0$ for this comparison. The
 point is not to identify a single global optimum in the grid, but to
 compare the same accuracy--mixing trade-off across the three algorithms.
 
 The comparison reinforces the earlier warning about ESS. ULA can obtain a high
-ESS per gradient evaluation because it never rejects and uses only one
-gradient per step, but its covariance error remains visibly affected by
-finite-step bias. MALA is the most accurate method in this grid, with much
-lower functional RMSE and covariance error, but this comes at the cost of
-extra gradient evaluations and rejections. KLMC sits between these two
+ESS per work unit because it never rejects and uses only one gradient per
+step, but its covariance error remains visibly affected by finite-step
+bias. MALA is the most accurate method in this grid on the moment-error
+diagnostics, but this comes at the cost of extra target work and
+rejections. KLMC sits between these two
 behaviours in the tested regime: it is approximate like ULA and requires
 tuning of both $h$ and $\gamma$, but the momentum variable can improve
 cost-aware mixing at larger step sizes.
@@ -1273,11 +1315,11 @@ regularisation, but it is no longer an exactly Gaussian benchmark. We
 therefore avoid extending the theoretical guarantees beyond their stated
 setting. The non-Gaussian experiment is used only as an empirical check
 that the same diagnostics--accuracy against a reference, ESS, acceptance
-rate, and gradient cost--remain informative when exact posterior moments
+rate, and work-normalised cost--remain informative when exact posterior moments
 are unavailable. Figure~\ref{fig:logistic-cost-aware} shows that this
 diagnostic set is still useful: ULA's cost-normalised ESS rises with $h$
-while its functional error worsens, MALA remains stable on covariance
-error, and KLMC can be competitive for a well-tuned step size without a
+while its moment errors worsen, MALA remains stable on covariance error,
+and KLMC can be competitive for a well-tuned step size without a
 Metropolis correction.
 
 \subsection{KLMC interpretation}
@@ -1298,7 +1340,7 @@ here.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The common pattern across the experiments is that raw mixing and accuracy need not move together. ULA can obtain large ESS, especially at larger step sizes, but its moment and functional errors reveal the finite-step bias. MALA controls this bias through the Metropolis correction, at the cost of rejections and a more expensive transition. KLMC provides a third trade-off: it uses momentum and one gradient step per iteration in the implemented scheme, but it remains unadjusted and is sensitive to step size and friction.
+The common pattern across the experiments is that raw mixing and accuracy need not move together. ULA can obtain large ESS, especially at larger step sizes, but its mean and covariance errors reveal the finite-step bias. MALA controls this bias through the Metropolis correction, at the cost of rejections and a more expensive transition. KLMC provides a third trade-off: it uses momentum and one gradient step per iteration in the implemented scheme, but it remains unadjusted and is sensitive to step size and friction.
 
 \section{Discussion}
 
@@ -1329,7 +1371,7 @@ Requires tuning $h$ and $\gamma$; theory depends on conditioning. \\
 
 The main interpretation is that the three algorithms should not be ranked by a single number. ULA is the simplest and cheapest discretisation, so it is attractive when a small amount of bias is acceptable or when the step size can be chosen conservatively. MALA uses the same local Langevin proposal but corrects it with a Metropolis--Hastings step, making it more reliable for exact targeting at the price of rejections and additional target/proposal computations. KLMC changes the underlying dynamics by adding momentum; this can improve exploration, but the unadjusted implementation is still sensitive to the integrator, the step size, and the friction parameter.
 
-There are several caveats to the numerical comparisons. First, the ESS reported here is the minimum coordinate-wise ESS, not a multivariate ESS, and values near the post-burn-in chain length should be read as diagnostic summaries rather than exact independent sample counts. Second, the cost normalisation uses gradient evaluations as the main unit because gradients dominate many Bayesian models, but this ignores log-density evaluations, proposal-density arithmetic, linear algebra, and vectorisation effects. This convention is especially important for MALA, whose implementation can cache one current gradient but still requires extra target/proposal work for the accept--reject step. Third, the logistic-regression errors are distances to a long MALA reference chain rather than exact posterior errors; no multi-chain convergence or Monte Carlo standard error analysis is included. Finally, KLMC is unadjusted in these experiments, so high ESS can still correspond to efficient exploration of a biased discretisation.
+There are several caveats to the numerical comparisons. First, the ESS reported here is the minimum coordinate-wise ESS, not a multivariate ESS, and values near the post-burn-in chain length should be read as diagnostic summaries rather than exact independent sample counts. Second, the cost normalisation uses the simple work count $W=N_{\nabla}+N_{\log\pi}$ rather than wall-clock time. This charges MALA for the log-density work needed by the accept--reject correction, but it still ignores proposal-density arithmetic, linear algebra constants, vectorisation, and implementation-level timing effects. Third, the logistic-regression errors are distances to a long MALA reference chain rather than exact posterior errors; no multi-chain convergence or Monte Carlo standard error analysis is included. Finally, KLMC is unadjusted in these experiments, so high ESS can still correspond to efficient exploration of a biased discretisation.
 
 \section{Conclusion}
 

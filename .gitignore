@@ -11,3 +11,22 @@ results/raw/
 *.pkl
 .DS_Store
 build/
+
+# Local agent/Codex/editor metadata
+.codex/
+.agents/
+AGENTS.md
+*.codex*
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
