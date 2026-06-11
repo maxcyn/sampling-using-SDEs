@@ -93,14 +93,12 @@ def main() -> None:
             plot_cost_aware_sweep,
             figure_dir / "linear_regression_cost_aware.png",
             args.allow_missing,
-            title="Bayesian linear regression",
         ),
         maybe_plot(
             "results/summary/logistic_regression_cost_aware.csv",
             plot_cost_aware_sweep,
             figure_dir / "logistic_regression_cost_aware.png",
             args.allow_missing,
-            title="Bayesian logistic regression",
         ),
     ]
 

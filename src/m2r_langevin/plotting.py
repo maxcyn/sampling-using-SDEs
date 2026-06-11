@@ -17,6 +17,16 @@ from m2r_langevin.diagnostics import autocorr_fft, effective_sample_size
 
 DataFrameOrPath = pd.DataFrame | str | Path
 SAMPLER_ORDER = ["ULA", "MALA", "KLMC"]
+DIAGNOSTIC_PANELS = [
+    ("mean_error", "mean error", "Mean error"),
+    ("cov_error", "covariance error", "Covariance error"),
+    ("min_ess", "minimum ESS", "Minimum-coordinate ESS"),
+    (
+        "ess_per_work",
+        "ESS per work unit",
+        "Cost-normalised minimum-coordinate ESS",
+    ),
+]
 
 
 def _load_frame(data: DataFrameOrPath) -> pd.DataFrame:
@@ -65,6 +75,19 @@ def _plot_metric_by_sampler(
     ax.set_xlabel(x_col.replace("_", " "))
     ax.set_ylabel(ylabel)
     ax.grid(True, alpha=0.3)
+
+
+def _plot_step_size_diagnostics(df: pd.DataFrame, output_path: str | Path) -> Path:
+    fig, axes_grid = plt.subplots(2, 2, figsize=(12, 8))
+    axes = axes_grid.ravel()
+
+    for ax, (metric, ylabel, title) in zip(axes, DIAGNOSTIC_PANELS, strict=True):
+        _plot_metric_by_sampler(ax, df, "h", metric, ylabel)
+        ax.set_title(title)
+
+    axes[0].legend()
+    fig.tight_layout()
+    return _save(fig, output_path)
 
 
 def plot_trace_acf(
@@ -117,38 +140,18 @@ def plot_gaussian_sampler_sweep(
     df = _load_frame(data)
     df = _aggregate(df, ["sampler", "h"])
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-    _plot_metric_by_sampler(axes[0], df, "h", "mean_error", "mean error")
-    _plot_metric_by_sampler(axes[1], df, "h", "cov_error", "covariance error")
-    _plot_metric_by_sampler(axes[2], df, "h", "min_ess", "minimum ESS")
-    axes[0].set_title("Mean error")
-    axes[1].set_title("Covariance error")
-    axes[2].set_title("Minimum coordinate ESS")
-    axes[0].legend()
-    fig.tight_layout()
-    return _save(fig, output_path)
+    return _plot_step_size_diagnostics(df, output_path)
 
 
 def plot_cost_aware_sweep(
     data: DataFrameOrPath,
     output_path: str | Path,
-    title: str,
 ) -> Path:
-    """Plot mean error, covariance error, and ESS per work unit vs step size."""
+    """Plot accuracy, mixing, and cost-aware diagnostics vs step size."""
 
     df = _aggregate(_load_frame(data), ["sampler", "h"])
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-    _plot_metric_by_sampler(axes[0], df, "h", "mean_error", "mean error")
-    _plot_metric_by_sampler(axes[1], df, "h", "cov_error", "covariance error")
-    _plot_metric_by_sampler(axes[2], df, "h", "ess_per_work", "ESS per work unit")
-    axes[0].set_title("Mean error")
-    axes[1].set_title("Covariance error")
-    axes[2].set_title("Cost-normalised ESS")
-    axes[0].legend()
-    fig.suptitle(title)
-    fig.tight_layout()
-    return _save(fig, output_path)
+    return _plot_step_size_diagnostics(df, output_path)
 
 
 __all__ = [

@@ -10,6 +10,13 @@ from m2r_langevin.plotting import (
     plot_trace_acf,
 )
 
+DIAGNOSTIC_PANEL_TITLES = [
+    "Mean error",
+    "Covariance error",
+    "Minimum-coordinate ESS",
+    "Cost-normalised minimum-coordinate ESS",
+]
+
 
 def assert_png(path: Path) -> None:
     assert path.exists()
@@ -33,6 +40,27 @@ def sweep_frame() -> pd.DataFrame:
                 }
             )
     return pd.DataFrame(rows)
+
+
+def capture_plot_figure(plotter, tmp_path: Path, monkeypatch):
+    captured = {}
+
+    def capture_figure(fig, output_path):
+        captured["figure"] = fig
+        return Path(output_path).with_suffix(".png")
+
+    monkeypatch.setattr(plotting, "_save", capture_figure)
+    plotter(sweep_frame(), tmp_path / "plot.png")
+    return captured["figure"]
+
+
+def assert_four_diagnostic_panels(fig) -> None:
+    assert len(fig.axes) == 4
+    assert [ax.get_title() for ax in fig.axes] == DIAGNOSTIC_PANEL_TITLES
+    assert fig.axes[2].get_ylabel() == "minimum ESS"
+    assert fig.axes[3].get_ylabel() == "ESS per work unit"
+    assert np.allclose(fig.axes[2].lines[0].get_ydata(), [2000.0, 1000.0])
+    assert np.allclose(fig.axes[3].lines[0].get_ydata(), [1.0, 0.5])
 
 
 def test_plot_trace_acf_creates_png(tmp_path: Path) -> None:
@@ -64,7 +92,38 @@ def test_plot_gaussian_sweep_includes_klmc(tmp_path: Path, monkeypatch) -> None:
     assert plotted_labels == ["ULA", "MALA", "KLMC"]
 
 
+def test_plot_gaussian_sweep_uses_four_diagnostic_panels(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fig = capture_plot_figure(plot_gaussian_sampler_sweep, tmp_path, monkeypatch)
+
+    assert_four_diagnostic_panels(fig)
+
+
 def test_plot_cost_aware_sweep_creates_png(tmp_path: Path) -> None:
-    path = plot_cost_aware_sweep(sweep_frame(), tmp_path / "cost.png", title="Cost")
+    path = plot_cost_aware_sweep(sweep_frame(), tmp_path / "cost.png")
 
     assert_png(path)
+
+
+def test_plot_cost_aware_sweep_uses_four_diagnostic_panels(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fig = capture_plot_figure(plot_cost_aware_sweep, tmp_path, monkeypatch)
+
+    assert_four_diagnostic_panels(fig)
+
+
+def test_plot_cost_aware_sweep_has_no_figure_title(tmp_path: Path, monkeypatch) -> None:
+    figure_title = object()
+
+    def capture_title(fig, output_path):
+        nonlocal figure_title
+        figure_title = fig._suptitle
+        return Path(output_path).with_suffix(".png")
+
+    monkeypatch.setattr(plotting, "_save", capture_title)
+
+    plot_cost_aware_sweep(sweep_frame(), tmp_path / "cost.png")
+
+    assert figure_title is None
